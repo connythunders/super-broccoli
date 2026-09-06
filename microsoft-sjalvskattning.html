@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Microsoft 365 – Självskattning för personal</title>
+<meta name="description" content="Självskattningsverktyg där personal kan kryssa av vad de kan i Outlook, OneDrive, Teams, Word, Excel och PowerPoint och se sin nivå.">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
+        --accent: #8b5cf6;
+        --text-dark: #1e293b;
+        --text-light: #64748b;
+        --bg-light: #f8fafc;
+        --bg-white: #ffffff;
+        --border: #e2e8f0;
+        --green: #16a34a;
+        --amber: #d97706;
+        --red: #dc2626;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        color: var(--text-dark);
+        background: var(--bg-light);
+        line-height: 1.6;
+    }
+
+    header {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: white;
+        padding: 3rem 1.5rem 2.5rem;
+        text-align: center;
+    }
+
+    header h1 {
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 0.75rem;
+    }
+
+    header p {
+        max-width: 640px;
+        margin: 0 auto;
+        opacity: 0.95;
+        font-size: 1.05rem;
+    }
+
+    .back-link {
+        display: inline-block;
+        margin-bottom: 1.25rem;
+        color: white;
+        opacity: 0.9;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+    .back-link:hover { opacity: 1; text-decoration: underline; }
+
+    main {
+        max-width: 900px;
+        margin: -1.5rem auto 3rem;
+        padding: 0 1.5rem;
+    }
+
+    .instructions {
+        background: var(--bg-white);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.5rem 1.75rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+        margin-bottom: 2rem;
+    }
+
+    .instructions h2 { font-size: 1.15rem; margin-bottom: 0.6rem; }
+    .instructions p { color: var(--text-light); font-size: 0.98rem; margin-bottom: 0.4rem; }
+    .instructions strong { color: var(--text-dark); }
+
+    .summary {
+        background: var(--bg-white);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.5rem 1.75rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+        margin-bottom: 2rem;
+    }
+
+    .summary h2 { font-size: 1.15rem; margin-bottom: 1rem; }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .summary-item {
+        background: var(--bg-light);
+        border-radius: 10px;
+        padding: 0.75rem;
+        text-align: center;
+    }
+
+    .summary-item .icon { font-size: 1.3rem; }
+    .summary-item .name { font-size: 0.8rem; color: var(--text-light); margin: 0.2rem 0 0.35rem; }
+    .summary-item .level { font-size: 0.85rem; font-weight: 700; }
+
+    .overall {
+        margin-top: 1.25rem;
+        padding-top: 1.25rem;
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .overall-label { font-size: 0.95rem; color: var(--text-light); }
+    .overall-value { font-size: 1.4rem; font-weight: 800; color: var(--primary-dark); }
+
+    .category {
+        background: var(--bg-white);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.5rem 1.75rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        margin-bottom: 1.5rem;
+    }
+
+    .category-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .category-title {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+
+    .category-title .emoji { font-size: 1.4rem; }
+
+    .level-badge {
+        font-size: 0.8rem;
+        font-weight: 700;
+        padding: 0.3rem 0.75rem;
+        border-radius: 999px;
+        white-space: nowrap;
+    }
+
+    .progress-track {
+        height: 8px;
+        background: var(--border);
+        border-radius: 999px;
+        overflow: hidden;
+        margin: 0.75rem 0 1.1rem;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        border-radius: 999px;
+        transition: width 0.3s ease;
+        width: 0%;
+    }
+
+    .item-list { list-style: none; }
+
+    .item-list li {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.7rem;
+        padding: 0.55rem 0;
+        border-bottom: 1px solid var(--bg-light);
+        font-size: 0.98rem;
+    }
+    .item-list li:last-child { border-bottom: none; }
+
+    .item-list input[type="checkbox"] {
+        margin-top: 0.2rem;
+        width: 18px;
+        height: 18px;
+        accent-color: var(--primary);
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+
+    .item-list label {
+        cursor: pointer;
+        color: var(--text-dark);
+    }
+
+    .item-list input:checked + label {
+        color: var(--text-light);
+        text-decoration: line-through;
+        text-decoration-color: var(--border);
+    }
+
+    .resources {
+        font-size: 0.88rem;
+        color: var(--text-light);
+        margin-top: 0.9rem;
+        padding-top: 0.9rem;
+        border-top: 1px dashed var(--border);
+    }
+    .resources a {
+        color: var(--primary-dark);
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .resources a:hover { text-decoration: underline; }
+
+    .actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin: 2rem 0 1rem;
+    }
+
+    .btn {
+        padding: 0.85rem 1.6rem;
+        border-radius: 12px;
+        border: 2px solid var(--border);
+        background: var(--bg-white);
+        color: var(--text-dark);
+        font-weight: 600;
+        font-size: 0.98rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .btn:hover { border-color: var(--primary); color: var(--primary-dark); }
+    .btn.primary {
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: white;
+        border: none;
+    }
+    .btn.primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(99,102,241,0.35); }
+
+    footer {
+        text-align: center;
+        color: var(--text-light);
+        font-size: 0.85rem;
+        padding: 1rem 1.5rem 2.5rem;
+    }
+
+    .saved-note {
+        text-align: center;
+        font-size: 0.82rem;
+        color: var(--text-light);
+        margin-bottom: 1.5rem;
+    }
+
+    @media print {
+        header { background: none; color: var(--text-dark); padding: 0.5rem 0; }
+        .back-link, .actions { display: none; }
+        .category, .instructions, .summary { box-shadow: none; border: 1px solid #ccc; }
+        body { background: white; }
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <a href="start.html" class="back-link">← Tillbaka till verktyg</a>
+    <h1>Microsoft 365 – Självskattning</h1>
+    <p>Ett snabbt sätt för personal att checka av var man ligger i Outlook, OneDrive, Teams, Word, Excel och PowerPoint. Tar ca 5 minuter.</p>
+</header>
+
+<main>
+    <div class="instructions">
+        <h2>Så här gör du</h2>
+        <p>Gå igenom varje kategori och kryssa i det du kan göra <strong>direkt, utan att behöva fundera eller googla</strong>. "Jag skulle nog klara det om jag försökte" räknas inte som ja.</p>
+        <p>Det är inte ett prov – ingen annan ser ditt resultat. Det sparas bara i din egen webbläsare, så att du kan gå tillbaka och se hur det utvecklas.</p>
+    </div>
+
+    <div class="summary">
+        <h2>Din översikt</h2>
+        <div class="summary-grid" id="summary-grid"></div>
+        <div class="overall">
+            <span class="overall-label">Totalt avklarat</span>
+            <span class="overall-value" id="overall-value">0 / 0</span>
+        </div>
+    </div>
+
+    <div id="categories"></div>
+
+    <div class="actions">
+        <button class="btn primary" id="print-btn">🖨️ Skriv ut / spara som PDF</button>
+        <button class="btn" id="reset-btn">🗑️ Nollställ mitt resultat</button>
+    </div>
+
+    <p class="saved-note" id="saved-note"></p>
+</main>
+
+<footer>
+    Självskattningen sparas lokalt i din webbläsare – inget skickas eller lagras centralt.
+</footer>
+
+<script>
+const DATA = [
+    {
+        id: 'epost',
+        name: 'E-post (Outlook)',
+        emoji: '📧',
+        items: [
+            'Skicka och ta emot e-post med bifogade filer',
+            'Söka i inkorgen och organisera med mappar',
+            'Boka möten och svara på mötesinbjudningar i kalendern',
+            'Sätta upp automatiskt svar när jag är borta',
+            'Dela min kalender eller se en kollegas kalender',
+            'Skapa regler som sorterar inkommande mejl automatiskt'
+        ]
+    },
+    {
+        id: 'onedrive',
+        name: 'OneDrive / filer',
+        emoji: '☁️',
+        items: [
+            'Hitta och öppna mina sparade filer',
+            'Ladda upp filer och skapa mappar',
+            'Dela en fil eller mapp med en kollega',
+            'Samarbeta i samma dokument samtidigt som någon annan',
+            'Återställa en borttagen fil eller en äldre version',
+            'Synka OneDrive till dator/mobil för offlineåtkomst'
+        ]
+    },
+    {
+        id: 'teams',
+        name: 'Teams',
+        emoji: '🟪',
+        items: [
+            'Gå med i och delta i ett möte',
+            'Chatta och dela filer i en kanal',
+            'Dela min skärm i ett möte',
+            'Skapa ett nytt team/kanal och bjuda in kollegor',
+            'Spela in ett möte och hitta inspelningen efteråt',
+            'Kommentera eller redigera ett delat dokument tillsammans med andra i realtid'
+        ]
+    },
+    {
+        id: 'word',
+        name: 'Word',
+        emoji: '📄',
+        items: [
+            'Skriva och formatera text (fetstil, rubriker, punktlistor)',
+            'Infoga bilder och tabeller',
+            'Använda spårade ändringar och kommentarer',
+            'Skapa en automatisk innehållsförteckning',
+            'Göra en mall eller koppla dokument (brevfletta) för utskick',
+            'Använda diktering eller tillgänglighetsverktyg (t.ex. uppläsning)'
+        ]
+    },
+    {
+        id: 'excel',
+        name: 'Excel',
+        emoji: '📈',
+        items: [
+            'Skriva in data och göra enkla summeringar',
+            'Sortera och filtrera en tabell',
+            'Använda formler som OM och LETARAD/XLETAUPP',
+            'Skapa ett diagram utifrån data',
+            'Göra en pivottabell',
+            'Använda villkorsstyrd formatering'
+        ]
+    },
+    {
+        id: 'powerpoint',
+        name: 'PowerPoint',
+        emoji: '📊',
+        items: [
+            'Skapa bilder med text och bild',
+            'Använda en designmall eller tema',
+            'Lägga till övergångar och enkla animationer',
+            'Använda talarstöd/anteckningar vid presentation',
+            'Spela in en presentation med berättarröst',
+            'Samarbeta med kollegor i samma presentation samtidigt'
+        ]
+    }
+];
+
+const RESOURCES = {
+    onedrive: { href: 'onedrive-manual.html', text: 'OneDrive-manualen' },
+    teams: { href: 'teams-manual-gy.html', text: 'Teams-manualen' },
+    word: { href: 'word-manual.html', text: 'Word-manualen' },
+    excel: { href: 'excel-manual.html', text: 'Excel-manualen' },
+    powerpoint: { href: 'powerpoint-manual.html', text: 'PowerPoint-manualen' }
+};
+
+const STORAGE_KEY = 'ms365-sjalvskattning-v1';
+
+function levelForRatio(checked, total) {
+    const ratio = total === 0 ? 0 : checked / total;
+    if (ratio >= 1) return { label: 'Avancerad', color: 'var(--green)', bg: '#dcfce7' };
+    if (ratio >= 0.65) return { label: 'Van användare', color: '#0891b2', bg: '#cffafe' };
+    if (ratio >= 0.3) return { label: 'Grundläggande', color: 'var(--amber)', bg: '#fef3c7' };
+    return { label: 'Nybörjare', color: 'var(--red)', bg: '#fee2e2' };
+}
+
+function loadState() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+        return {};
+    }
+}
+
+function saveState(state) {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        const note = document.getElementById('saved-note');
+        note.textContent = 'Sparat ' + new Date().toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+        setTimeout(() => { note.textContent = ''; }, 2500);
+    } catch (e) { /* localStorage unavailable */ }
+}
+
+let state = loadState();
+
+function render() {
+    const categoriesEl = document.getElementById('categories');
+    categoriesEl.innerHTML = '';
+
+    DATA.forEach(cat => {
+        const checkedIds = state[cat.id] || [];
+        const checkedCount = cat.items.filter((_, i) => checkedIds.includes(i)).length;
+        const level = levelForRatio(checkedCount, cat.items.length);
+        const pct = Math.round((checkedCount / cat.items.length) * 100);
+
+        const section = document.createElement('div');
+        section.className = 'category';
+
+        const resource = RESOURCES[cat.id];
+        const resourceHtml = resource
+            ? `<div class="resources">Vill du fräscha upp något? Kolla <a href="${resource.href}">${resource.text}</a>.</div>`
+            : '';
+
+        section.innerHTML = `
+            <div class="category-header">
+                <div class="category-title"><span class="emoji">${cat.emoji}</span> ${cat.name}</div>
+                <span class="level-badge" style="color:${level.color};background:${level.bg}">${level.label} (${checkedCount}/${cat.items.length})</span>
+            </div>
+            <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+            <ul class="item-list">
+                ${cat.items.map((item, i) => `
+                    <li>
+                        <input type="checkbox" id="${cat.id}-${i}" data-cat="${cat.id}" data-idx="${i}" ${checkedIds.includes(i) ? 'checked' : ''}>
+                        <label for="${cat.id}-${i}">${item}</label>
+                    </li>
+                `).join('')}
+            </ul>
+            ${resourceHtml}
+        `;
+
+        categoriesEl.appendChild(section);
+    });
+
+    categoriesEl.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', onToggle);
+    });
+
+    renderSummary();
+}
+
+function onToggle(e) {
+    const catId = e.target.dataset.cat;
+    const idx = parseInt(e.target.dataset.idx, 10);
+    const list = new Set(state[catId] || []);
+    if (e.target.checked) list.add(idx); else list.delete(idx);
+    state[catId] = Array.from(list);
+    saveState(state);
+    render();
+}
+
+function renderSummary() {
+    const grid = document.getElementById('summary-grid');
+    grid.innerHTML = '';
+    let totalChecked = 0, totalItems = 0;
+
+    DATA.forEach(cat => {
+        const checkedIds = state[cat.id] || [];
+        const checkedCount = cat.items.filter((_, i) => checkedIds.includes(i)).length;
+        totalChecked += checkedCount;
+        totalItems += cat.items.length;
+        const level = levelForRatio(checkedCount, cat.items.length);
+
+        const item = document.createElement('div');
+        item.className = 'summary-item';
+        item.innerHTML = `
+            <div class="icon">${cat.emoji}</div>
+            <div class="name">${cat.name}</div>
+            <div class="level" style="color:${level.color}">${level.label}</div>
+        `;
+        grid.appendChild(item);
+    });
+
+    document.getElementById('overall-value').textContent = totalChecked + ' / ' + totalItems;
+}
+
+document.getElementById('print-btn').addEventListener('click', () => window.print());
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+    if (confirm('Nollställ hela din självskattning?')) {
+        state = {};
+        saveState(state);
+        render();
+    }
+});
+
+render();
+</script>
+
+</body>
+</html>
