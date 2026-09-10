@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="sv" data-theme="ljus" data-font="system" data-size="2" data-bionic="0">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Lättläst manual för elever om hur man använder NotebookLM: skapa en anteckningsbok, lägga till källor, chatta med sina källor, göra ljudöversikt, frågekort, quiz och tankekarta i Studio, samt källkritik och att lita på AI:n. Med en Fråga-knapp för att söka svar direkt i manualen, Bionic Reading och mörkt läge.">
+<meta name="theme-color" content="#f7f5f1">
+<title>NotebookLM – manual för elever</title>
+<style>
+:root{
+  --bg:#f7f5f1; --bg-tint:#efece6;
+  --surface:#ffffff; --surface-2:#f3f1ec;
+  --text:#1e2227; --text-soft:#565f6b; --text-faint:#7b8593;
+  --line:#ded9d0; --line-strong:#c6bfb2;
+  --accent:#0d9488; --accent-weak:#e2f4f1; --accent-ink:#0b6f66;
+  --warn:#a2560c; --warn-weak:#fbeee0;
+  --good:#2c6b3f; --good-weak:#e5f1e7;
+  --bad:#9d3232; --bad-weak:#fae9e9;
+  --shadow:0 1px 2px rgba(20,20,20,.05), 0 8px 24px rgba(20,20,20,.06);
+  --radius:14px;
+  --lh:1.75;
+  --measure:68ch;
+  --fs:17px;
+}
+html[data-theme="mork"]{
+  --bg:#14171b; --bg-tint:#191d22;
+  --surface:#1c2026; --surface-2:#232830;
+  --text:#e8eaed; --text-soft:#b3bac3; --text-faint:#8d95a0;
+  --line:#333a44; --line-strong:#48515e;
+  --accent:#5eead4; --accent-weak:#12332f; --accent-ink:#99f6e4;
+  --warn:#e0a45f; --warn-weak:#33271a;
+  --good:#7fc48f; --good-weak:#1c2d21;
+  --bad:#e08585; --bad-weak:#321f1f;
+}
+html[data-font="dyslexi"]{ --font-body:"OpenDyslexic","Comic Sans MS",var(--font-fallback); }
+html[data-size="1"]{ --fs:15px; }
+html[data-size="2"]{ --fs:17px; }
+html[data-size="3"]{ --fs:19px; }
+html[data-size="4"]{ --fs:22px; }
+*{ box-sizing:border-box; }
+html{ scroll-behavior:smooth; }
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:var(--font-body, "Segoe UI"), system-ui, -apple-system, sans-serif;
+  font-size:var(--fs); line-height:var(--lh);
+  transition:background .2s ease, color .2s ease;
+}
+a{ color:var(--accent); }
+img{ max-width:100%; }
+.skip-link{ position:absolute; left:-999px; top:0; background:var(--accent); color:#fff; padding:.6rem 1rem; border-radius:0 0 8px 0; z-index:200; }
+.skip-link:focus{ left:0; }
+
+/* Topbar */
+.topbar{
+  position:sticky; top:0; z-index:50;
+  background:var(--surface); border-bottom:1px solid var(--line);
+  display:flex; align-items:center; gap:.75rem;
+  padding:.6rem 1rem; flex-wrap:wrap;
+}
+.topbar .brand{ display:flex; align-items:center; gap:.55rem; font-weight:700; margin-right:auto; text-decoration:none; color:var(--text); }
+.topbar .brand-icon{ font-size:1.3rem; }
+.topbar .back{ font-size:.85rem; color:var(--text-soft); text-decoration:none; }
+.topbar .back:hover{ color:var(--accent); }
+.controls{ display:flex; align-items:center; gap:.4rem; flex-wrap:wrap; }
+.controls button{
+  background:var(--surface-2); color:var(--text); border:1px solid var(--line);
+  border-radius:8px; padding:.4rem .6rem; font-size:.82rem; cursor:pointer;
+  display:inline-flex; align-items:center; gap:.3rem;
+}
+.controls button:hover{ border-color:var(--accent); color:var(--accent); }
+.controls button[aria-pressed="true"], .controls button.active{
+  background:var(--accent-weak); border-color:var(--accent); color:var(--accent-ink); font-weight:600;
+}
+#askBtn{ background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
+#askBtn:hover{ color:#fff; filter:brightness(1.08); }
+.seg{ display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+.seg button{ border:none; border-radius:0; }
+.seg button + button{ border-left:1px solid var(--line); }
+
+/* Layout */
+.layout{ display:grid; grid-template-columns:270px minmax(0,1fr); gap:0; max-width:1180px; margin:0 auto; }
+aside.toc{
+  border-right:1px solid var(--line); padding:1.2rem .9rem 3rem; align-self:start;
+  position:sticky; top:56px; max-height:calc(100vh - 56px); overflow-y:auto;
+}
+aside.toc h2{ font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; color:var(--text-faint); margin:.2rem 0 .8rem; }
+aside.toc ol{ list-style:none; margin:0; padding:0; counter-reset:ch; }
+aside.toc li{ counter-increment:ch; margin:.15rem 0; }
+aside.toc a{
+  display:flex; gap:.5rem; align-items:baseline; text-decoration:none; color:var(--text-soft);
+  padding:.4rem .5rem; border-radius:8px; font-size:.88rem;
+}
+aside.toc a::before{ content:counter(ch); font-weight:700; color:var(--text-faint); min-width:1.2em; }
+aside.toc a:hover{ background:var(--surface-2); color:var(--text); }
+aside.toc a.active{ background:var(--accent-weak); color:var(--accent-ink); font-weight:600; }
+aside.toc a.active::before{ color:var(--accent); }
+.progress-wrap{ margin-top:1rem; padding-top:1rem; border-top:1px solid var(--line); }
+.progress-wrap .bar{ height:6px; border-radius:99px; background:var(--surface-2); overflow:hidden; }
+.progress-wrap .bar > i{ display:block; height:100%; width:0%; background:var(--accent); transition:width .3s ease; }
+.progress-wrap p{ font-size:.75rem; color:var(--text-faint); margin:.4rem 0 0; }
+
+main{ min-width:0; padding:1.6rem 1.4rem 6rem; }
+.hero{ max-width:var(--measure); }
+.hero h1{ font-size:1.7rem; margin:.2rem 0 .4rem; }
+.hero .lead{ color:var(--text-soft); font-size:1.02rem; }
+.badges{ display:flex; gap:.4rem; flex-wrap:wrap; margin:.7rem 0 1rem; }
+.badge{ font-size:.72rem; background:var(--surface-2); border:1px solid var(--line); padding:.2rem .55rem; border-radius:99px; color:var(--text-soft); }
+.badge.accent{ background:var(--accent-weak); border-color:var(--accent); color:var(--accent-ink); }
+
+.goal-box{ border:1px solid var(--accent); background:var(--accent-weak); border-radius:var(--radius); padding:1rem 1.2rem; margin:1.2rem 0 0; }
+.goal-box strong.label{ display:block; font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; margin-bottom:.5rem; color:var(--accent-ink); }
+.goal-box ul{ list-style:none; padding:0; margin:0; columns:2; column-gap:1.5rem; }
+.goal-box li{ margin:.3rem 0; break-inside:avoid; }
+.goal-box li::before{ content:"✓ "; color:var(--good); font-weight:700; }
+@media (max-width:640px){ .goal-box ul{ columns:1; } }
+
+#prose section{ max-width:var(--measure); margin:2.6rem 0; scroll-margin-top:70px; }
+#prose h2{
+  font-size:1.3rem; display:flex; gap:.6rem; align-items:center; border-bottom:1px solid var(--line); padding-bottom:.5rem;
+}
+#prose h2 .num{ color:var(--accent); font-variant-numeric:tabular-nums; }
+#prose h3{ font-size:1.05rem; margin-top:1.4rem; }
+#prose p{ margin:.8rem 0; }
+#prose ul, #prose ol{ padding-left:1.3rem; }
+#prose li{ margin:.35rem 0; }
+#prose p.q{ margin:.3rem 0 0; font-style:italic; color:var(--accent-ink); }
+
+.back-to-top{
+  position:fixed; right:1.2rem; bottom:1.2rem; z-index:60;
+  background:var(--surface); border:1px solid var(--line); box-shadow:var(--shadow);
+  border-radius:99px; padding:.55rem 1rem; font-size:.82rem; color:var(--text);
+  text-decoration:none; opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;
+  transform:translateY(6px);
+}
+.back-to-top.visible{ opacity:1; pointer-events:auto; transform:translateY(0); }
+.back-to-top:hover{ border-color:var(--accent); color:var(--accent); }
+
+.callout{ border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--surface-2); border-radius:8px; padding:.8rem 1rem; margin:1rem 0; }
+.callout.tip{ border-left-color:var(--good); }
+.callout.warn{ border-left-color:var(--warn); background:var(--warn-weak); }
+.callout p{ margin:.3rem 0; }
+.callout strong.label{ display:block; font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; margin-bottom:.3rem; color:var(--text-faint); }
+
+.steps{ counter-reset:step; list-style:none; padding:0; margin:1rem 0; }
+.steps li{ counter-increment:step; position:relative; padding-left:2.4rem; margin:.9rem 0; }
+.steps li::before{
+  content:counter(step); position:absolute; left:0; top:0; width:1.7rem; height:1.7rem;
+  background:var(--accent-weak); color:var(--accent-ink); border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.85rem;
+}
+
+kbd{ background:var(--surface-2); border:1px solid var(--line-strong); border-bottom-width:2px; border-radius:5px; padding:.05rem .4rem; font-size:.85em; font-family:inherit; }
+
+table.icons{ width:100%; border-collapse:collapse; margin:1rem 0; }
+table.icons th, table.icons td{ text-align:left; padding:.5rem .6rem; border-bottom:1px solid var(--line); vertical-align:top; }
+table.icons th{ color:var(--text-faint); font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; }
+table.icons td.icon{ font-size:1.3rem; width:2.2rem; }
+
+ul.checklist{ list-style:none; padding:0; }
+ul.checklist li{ background:var(--surface-2); border:1px solid var(--line); border-radius:8px; padding:.1rem .2rem; margin:.4rem 0; }
+ul.checklist label{ display:flex; align-items:flex-start; gap:.6rem; padding:.6rem .7rem; cursor:pointer; }
+ul.checklist input[type=checkbox]{ margin-top:.2rem; width:1.1rem; height:1.1rem; accent-color:var(--accent); flex:none; }
+ul.checklist input[type=checkbox]:checked + span{ color:var(--text-faint); text-decoration:line-through; }
+.checklist-meta{ display:flex; justify-content:space-between; align-items:center; font-size:.78rem; color:var(--text-faint); margin:.3rem .2rem 1.2rem; }
+.checklist-meta button{ background:none; border:none; color:var(--accent); cursor:pointer; font-size:.78rem; }
+
+details.faq{ border:1px solid var(--line); border-radius:10px; margin:.6rem 0; background:var(--surface); overflow:hidden; }
+details.faq summary{ cursor:pointer; padding:.8rem 1rem; font-weight:600; list-style:none; display:flex; justify-content:space-between; gap:1rem; }
+details.faq summary::-webkit-details-marker{ display:none; }
+details.faq summary::after{ content:"+"; color:var(--accent); font-size:1.2rem; }
+details.faq[open] summary::after{ content:"–"; }
+details.faq .a{ padding:0 1rem 1rem; color:var(--text-soft); }
+
+dl.glossary{ margin:1rem 0; }
+dl.glossary dt{ font-weight:700; margin-top:.9rem; }
+dl.glossary dd{ margin:.2rem 0 0; color:var(--text-soft); }
+
+.chip-row{ display:flex; gap:.5rem; flex-wrap:wrap; margin:.8rem 0; }
+.chip{ background:var(--surface-2); border:1px solid var(--line); border-radius:99px; padding:.3rem .8rem; font-size:.85rem; }
+
+.ask-cta{
+  display:inline-flex; align-items:center; gap:.5rem; margin-top:1rem;
+  background:var(--accent); color:#fff; border:none; border-radius:99px;
+  padding:.7rem 1.3rem; font-size:.92rem; font-weight:700; cursor:pointer; box-shadow:var(--shadow);
+}
+.ask-cta:hover{ filter:brightness(1.08); }
+
+/* Fråga-panelen (drawer) */
+#askBackdrop{ position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:70; opacity:0; pointer-events:none; transition:opacity .2s ease; }
+#askBackdrop.on{ opacity:1; pointer-events:auto; }
+.panel{
+  position:fixed; z-index:85; top:0; right:0; bottom:0; width:min(94vw,26rem);
+  background:var(--surface); border-left:1px solid var(--line); box-shadow:var(--shadow);
+  display:flex; flex-direction:column; transform:translateX(102%); transition:transform .22s ease;
+}
+.panel.open{ transform:none; }
+@media (max-width:560px){
+  .panel{ top:auto; width:100%; height:88vh; border-left:none; border-top:1px solid var(--line); border-radius:18px 18px 0 0; transform:translateY(102%); }
+  .panel.open{ transform:none; }
+}
+.panel-head{ display:flex; align-items:center; gap:.6rem; padding:.9rem 1rem; border-bottom:1px solid var(--line); }
+.panel-head h2{ font-size:1rem; margin:0 auto 0 0; }
+.panel-head button{ background:var(--surface-2); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:.35rem .6rem; cursor:pointer; }
+.panel-body{ overflow-y:auto; padding:1rem; flex:1; }
+.panel-body .hint{ font-size:.83rem; color:var(--text-soft); margin:0 0 .7rem; }
+.field{ width:100%; font:inherit; font-size:.95rem; padding:.7rem .8rem; min-height:46px; background:var(--bg); color:var(--text); border:1px solid var(--line-strong); border-radius:10px; }
+.qa-answer{ border:1px solid var(--line); border-left:4px solid var(--accent); background:var(--bg); border-radius:10px; padding:.85rem 1rem; margin:.9rem 0 0; }
+.qa-answer h3{ font-size:.95rem; margin:0 0 .4rem; }
+.qa-answer p{ font-size:.9rem; margin:.3rem 0; }
+.qa-answer .src{ margin-top:.6rem; font-size:.78rem; color:var(--text-faint); }
+.qa-answer .src a{ color:var(--accent); }
+.empty{ font-size:.88rem; color:var(--text-faint); padding:.4rem .1rem; }
+
+.ask-fab{
+  position:fixed; left:1.2rem; bottom:1.2rem; z-index:60;
+  display:inline-flex; align-items:center; gap:.5rem;
+  background:var(--accent); color:#fff; border:none; border-radius:99px;
+  padding:.8rem 1.2rem; font-size:.92rem; font-weight:700; cursor:pointer;
+  box-shadow:var(--shadow); animation:ask-pop .3s ease;
+}
+.ask-fab:hover{ filter:brightness(1.08); }
+@keyframes ask-pop{ from{ transform:scale(.9); opacity:0; } to{ transform:scale(1); opacity:1; } }
+@media (max-width:560px){
+  .ask-fab .txt{ display:none; }
+  .ask-fab{ padding:.8rem; }
+}
+
+footer.page{ border-top:1px solid var(--line); padding:2rem 1.4rem 3rem; text-align:center; color:var(--text-faint); font-size:.85rem; }
+
+.mobile-toc-toggle{ display:none; }
+@media (max-width: 880px){
+  .layout{ grid-template-columns:1fr; }
+  aside.toc{
+    position:static; max-height:none; border-right:none; border-bottom:1px solid var(--line);
+    display:none;
+  }
+  aside.toc.open{ display:block; }
+  .mobile-toc-toggle{ display:inline-flex; }
+}
+@media print{
+  .topbar, aside.toc, .no-print, footer.page{ display:none !important; }
+  .layout{ display:block; }
+  main{ padding:0; }
+  #prose section{ break-inside:avoid; max-width:none; }
+  body{ background:#fff; color:#000; }
+}
+.bx{ font-weight:700; }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#prose">Hoppa till innehållet</a>
+
+<header class="topbar no-print">
+  <div class="brand">
+    <span class="brand-icon">📓</span>
+    <span>NotebookLM-manualen</span>
+  </div>
+  <a class="back" href="start.html">← Till startsidan</a>
+  <div class="controls">
+    <button type="button" class="mobile-toc-toggle" id="tocToggle" aria-expanded="false">☰ Kapitel</button>
+    <div class="seg" role="group" aria-label="Ljust eller mörkt läge">
+      <button type="button" id="themeLjus" aria-pressed="true">☀️ Ljus</button>
+      <button type="button" id="themeMork" aria-pressed="false">🌙 Mörk</button>
+    </div>
+    <div class="seg" role="group" aria-label="Textstorlek">
+      <button type="button" id="sizeMinus" aria-label="Mindre text">A−</button>
+      <button type="button" id="sizePlus" aria-label="Större text">A+</button>
+    </div>
+    <button type="button" id="fontToggle" aria-pressed="false">🔤 Dyslexivänligt typsnitt</button>
+    <div class="seg" role="group" aria-label="Bionic Reading-nivå">
+      <button type="button" id="bionic0" aria-pressed="true">Av</button>
+      <button type="button" id="bionic1" aria-pressed="false">B1</button>
+      <button type="button" id="bionic2" aria-pressed="false">B2</button>
+      <button type="button" id="bionic3" aria-pressed="false">B3</button>
+    </div>
+    <button type="button" id="printBtn">🖨️ Skriv ut</button>
+    <button type="button" id="askBtn">💬 Fråga</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="toc" id="tocAside">
+    <h2>Kapitel</h2>
+    <ol id="tocList">
+      <li><a href="#k1">Vad är NotebookLM?</a></li>
+      <li><a href="#k2">Skapa en anteckningsbok</a></li>
+      <li><a href="#k3">Lägga till källor</a></li>
+      <li><a href="#k4">Chatta med dina källor</a></li>
+      <li><a href="#k5">Studio – ljud- och videoöversikt</a></li>
+      <li><a href="#k6">Studio – frågekort och quiz</a></li>
+      <li><a href="#k7">Studio – tankekarta och rapporter</a></li>
+      <li><a href="#k8">Spara svar som anteckningar</a></li>
+      <li><a href="#k9">Dela anteckningsboken</a></li>
+      <li><a href="#k10">Källkritik – lita inte blint på AI:n</a></li>
+      <li><a href="#k11">Vanliga misstag och felsökning</a></li>
+      <li><a href="#k12">Ordlista</a></li>
+      <li><a href="#k13">Checklista</a></li>
+    </ol>
+    <div class="progress-wrap">
+      <div class="bar"><i id="progressBar"></i></div>
+      <p id="progressText">0 av 13 kapitel lästa</p>
+    </div>
+  </aside>
+
+  <main>
+    <div class="hero">
+      <div class="badges">
+        <span class="badge accent">Manual</span>
+        <span class="badge">Gymnasiet</span>
+        <span class="badge">Lättläst</span>
+        <span class="badge">Bionic Reading</span>
+        <span class="badge">Fråga-funktion</span>
+      </div>
+      <h1>NotebookLM – manual för elever</h1>
+      <p class="lead">Den här sidan visar dig steg för steg hur du använder NotebookLM: lägga till källor, ställa frågor och få svar som bygger på just dina källor, och skapa saker som ljudöversikter, frågekort och quiz i Studio. Använd menyn till vänster för att hoppa mellan kapitel, eller läs uppifrån och ner.</p>
+      <div class="goal-box">
+        <strong class="label">Det här ska du kunna efter guiden</strong>
+        <ul>
+          <li>Skapa en anteckningsbok och lägga till källor</li>
+          <li>Ställa frågor till dina källor</li>
+          <li>Kontrollera källhänvisningarna i svaren</li>
+          <li>Göra frågekort och quiz i Studio</li>
+          <li>Spara svar som egna anteckningar</li>
+          <li>Vara källkritisk mot det AI:n svarar</li>
+        </ul>
+        <button type="button" class="ask-cta" id="askBtnHero">🤔 Kört fast? Fråga här</button>
+      </div>
+    </div>
+
+    <article id="prose">
+
+      <section id="k1">
+        <h2><span class="num">01</span> Vad är NotebookLM?</h2>
+        <p>NotebookLM är ett verktyg från Google där du samlar dina egna källor – till exempel PDF-filer, texter, länkar eller egna anteckningar – i en <strong>anteckningsbok</strong>. Du kan sedan ställa frågor och få svar som bygger på exakt det du lagt in, inte på hela internet.</p>
+        <p>I NotebookLM kan du:</p>
+        <ul>
+          <li>Lägga till <strong>källor</strong>, till exempel kursmaterial, artiklar eller egna anteckningar</li>
+          <li>Ställa <strong>frågor</strong> och få svar med hänvisning till exakt var i källorna svaret kommer ifrån</li>
+          <li>Skapa studiematerial i <strong>Studio</strong>: ljudöversikt, tankekarta, frågekort, quiz och mer</li>
+          <li>Spara bra svar som <strong>egna anteckningar</strong></li>
+          <li>Dela anteckningsboken med lärare eller klasskompisar</li>
+        </ul>
+        <div class="callout tip">
+          <strong class="label">Bra att veta</strong>
+          <p>NotebookLM svarar bara utifrån de källor du lagt till – till skillnad från många andra AI-verktyg som gissar utifrån allt de tränats på. Det gör svaren mer pålitliga, men du ska ändå alltid kontrollera dem (se kapitel 10 om källkritik).</p>
+        </div>
+      </section>
+
+      <section id="k2">
+        <h2><span class="num">02</span> Skapa en anteckningsbok</h2>
+        <p class="q">"Var börjar jag?"</p>
+        <ol class="steps">
+          <li>Logga in med ditt skolkonto på <a href="https://notebooklm.google.com" target="_blank" rel="noopener">notebooklm.google.com</a>.</li>
+          <li>Klicka på knappen <strong>+ Skapa anteckningsblock</strong> uppe till vänster.</li>
+          <li>En ny, namnlös anteckningsbok öppnas med tre kolumner: <strong>Källor</strong> till vänster, <strong>Chatt</strong> i mitten och <strong>Studio</strong> till höger.</li>
+          <li>Byt namn på anteckningsboken genom att klicka på titeln högst upp och skriva ett tydligt namn, till exempel kurs och arbetsområde.</li>
+        </ol>
+        <div class="callout warn">
+          <strong class="label">Döp anteckningsboken direkt</strong>
+          <p>Precis som med filer i Teams och OneDrive – döp anteckningsboken med kurs och arbetsområde direkt, till exempel <kbd>Historia1b_Kalla_kriget</kbd>, så hittar du rätt bok senare.</p>
+        </div>
+      </section>
+
+      <section id="k3">
+        <h2><span class="num">03</span> Lägga till källor</h2>
+        <p class="q">"Vilka källor kan jag lägga till?" · "Hur många källor får jag ha?"</p>
+        <p>Allt NotebookLM svarar bygger på källorna du lägger till i kolumnen <strong>Källor</strong>.</p>
+        <ol class="steps">
+          <li>Klicka på <strong>+ Lägg till källor</strong> i vänsterkolumnen.</li>
+          <li>Ladda upp filer (till exempel PDF, Word-dokument eller bilder), klistra in en webbadress, eller skriv in text direkt.</li>
+          <li>Du kan också söka fram nya källor direkt på webben med sökrutan under Källor.</li>
+          <li>Källorna dyker upp i listan – bocka ur en källa om du tillfälligt inte vill att NotebookLM ska använda den.</li>
+        </ol>
+        <div class="callout tip">
+          <strong class="label">Blanda flera källor</strong>
+          <p>Lägg gärna till flera källor om samma ämne, till exempel både kursboken och en artikel. Då kan NotebookLM jämföra vad källorna säger och du ser om de är överens.</p>
+        </div>
+      </section>
+
+      <section id="k4">
+        <h2><span class="num">04</span> Chatta med dina källor</h2>
+        <p class="q">"Hur vet jag att svaret stämmer?"</p>
+        <ol class="steps">
+          <li>Skriv din fråga i rutan <strong>Ställ en fråga eller skapa något</strong> längst ner i mittenkolumnen.</li>
+          <li>Läs svaret som kommer – det är skrivet med information från dina källor.</li>
+          <li>Titta på de små siffrorna i svaret. Klicka på en siffra för att se exakt vilket avsnitt i källan svaret kommer ifrån.</li>
+        </ol>
+        <div class="callout warn">
+          <strong class="label">Kontrollera alltid källhänvisningen</strong>
+          <p>Klicka igenom källhänvisningarna innan du använder ett svar i en uppgift. Står det inte där du blir hänvisad – lita inte på svaret. Se kapitel 10 för mer om källkritik.</p>
+        </div>
+        <p>Du ser hur många källor som används i chatten längst ner till höger, till exempel "0 källor" innan du lagt till några.</p>
+      </section>
+
+      <section id="k5">
+        <h2><span class="num">05</span> Studio – ljud- och videoöversikt</h2>
+        <p>I kolumnen <strong>Studio</strong> till höger kan du skapa färdigt studiematerial utifrån dina källor.</p>
+        <h3>Ljudöversikt</h3>
+        <p>Skapar en poddliknande sammanfattning där två AI-röster pratar om innehållet i dina källor – bra att lyssna på till exempel på väg till skolan som repetition.</p>
+        <h3>Videoöversikt</h3>
+        <p>Skapar en kort video som sammanfattar källorna med bilder och en berättarröst.</p>
+        <ol class="steps">
+          <li>Klicka på <strong>Ljudöversikt</strong> eller <strong>Videoöversikt</strong> i Studio-kolumnen.</li>
+          <li>Vänta medan NotebookLM skapar materialet – det kan ta någon minut.</li>
+          <li>Lyssna eller titta igenom resultatet. Du kan pausa och spola precis som i en vanlig ljud- eller videospelare.</li>
+        </ol>
+        <div class="callout tip">
+          <strong class="label">Bra som repetition, inte som första genomgång</strong>
+          <p>Ljud- och videoöversikter är bäst för att repetera något du redan läst om, inte som enda sättet att lära dig ett nytt område.</p>
+        </div>
+      </section>
+
+      <section id="k6">
+        <h2><span class="num">06</span> Studio – frågekort och quiz</h2>
+        <p class="q">"Hur pluggar jag inför ett prov med NotebookLM?"</p>
+        <h3>Frågekort</h3>
+        <ol class="steps">
+          <li>Klicka på <strong>Frågekort</strong> i Studio-kolumnen.</li>
+          <li>NotebookLM skapar digitala flashcards med en fråga på framsidan och svaret på baksidan, baserat på dina källor.</li>
+          <li>Klicka dig igenom korten och testa dig själv – klicka på kortet för att vända på det och se svaret.</li>
+        </ol>
+        <h3>Quiz</h3>
+        <ol class="steps">
+          <li>Klicka på <strong>Quiz</strong> i Studio-kolumnen.</li>
+          <li>Svara på frågorna som genereras utifrån dina källor.</li>
+          <li>Du får direkt se om svaret var rätt eller fel, och kan gå igenom quizet flera gånger.</li>
+        </ol>
+        <div class="callout tip">
+          <strong class="label">Bra inför prov</strong>
+          <p>Lägg in hela arbetsområdet som källor (till exempel alla lektionsanteckningar och kapitel i kursboken) innan du skapar frågekort eller quiz, så täcker de mer av det som kan komma på provet.</p>
+        </div>
+      </section>
+
+      <section id="k7">
+        <h2><span class="num">07</span> Studio – tankekarta och rapporter</h2>
+        <h3>Tankekarta</h3>
+        <p>Skapar en visuell karta som visar hur begreppen i dina källor hänger ihop – bra för att få överblick över ett stort område innan du börjar skriva.</p>
+        <h3>Rapporter</h3>
+        <p>Skapar en sammanfattande text i valfri stil, till exempel en studieguide eller en kort rapport, byggd på dina källor.</p>
+        <div class="callout">
+          <strong class="label">Presentation och datatabell</strong>
+          <p>Studio har även verktyg för att skapa en <strong>presentation</strong> (bildspel) och en <strong>datatabell</strong> utifrån dina källor – bra om du snabbt vill sortera fakta eller siffror i en tabell.</p>
+        </div>
+        <div class="callout warn">
+          <strong class="label">Läs igenom innan du använder det</strong>
+          <p>Precis som med chattsvar: läs igenom en tankekarta eller rapport ordentligt innan du använder den i en inlämning. AI:n kan missförstå eller förenkla för mycket.</p>
+        </div>
+      </section>
+
+      <section id="k8">
+        <h2><span class="num">08</span> Spara svar som anteckningar</h2>
+        <p>Ett bra chattsvar försvinner inte, men det kan vara smidigt att spara det som en egen anteckning som du kan redigera vidare på.</p>
+        <ol class="steps">
+          <li>Klicka på <strong>Lägg till anteckning</strong> vid svaret du vill spara, eller på knappen <strong>Lägg till anteckning</strong> i Studio-kolumnen för att skriva en egen.</li>
+          <li>Anteckningen sparas som ett eget kort som du kan öppna, redigera och skriva vidare i.</li>
+          <li>Du kan även klicka på <strong>Kopiera</strong> för att klistra in ett svar direkt i till exempel Word.</li>
+        </ol>
+      </section>
+
+      <section id="k9">
+        <h2><span class="num">09</span> Dela anteckningsboken</h2>
+        <p>Klicka på knappen <strong>Dela</strong> uppe till höger för att bjuda in en lärare eller klasskompis till anteckningsboken. Ni kan då se samma källor och chatta i samma anteckningsbok.</p>
+        <div class="callout warn">
+          <strong class="label">Tänk på vad du delar</strong>
+          <p>Dela bara anteckningsböcker som är tänkta att vara gemensamma, till exempel ett grupparbete. Lägg inte in privat eller känslig information som källor.</p>
+        </div>
+      </section>
+
+      <section id="k10">
+        <h2><span class="num">10</span> Källkritik – lita inte blint på AI:n</h2>
+        <p class="q">"Kan jag lita på det NotebookLM svarar?"</p>
+        <p>NotebookLM är bättre än många andra AI-verktyg på att hålla sig till dina källor, men det kan ändå bli fel:</p>
+        <ul>
+          <li>AI:n kan <strong>missförstå eller förenkla</strong> det som faktiskt står i källan.</li>
+          <li>Om dina källor innehåller fel, blir svaret också fel – NotebookLM kollar inte om källorna själva stämmer.</li>
+          <li>En sammanfattning, tankekarta eller rapport kan utelämna viktiga detaljer.</li>
+        </ul>
+        <div class="callout warn">
+          <strong class="label">Gör så här</strong>
+          <p>Klicka alltid på källhänvisningarna och läs det aktuella avsnittet själv. Skriver du något i en inlämning – skriv det med egna ord och ange den ursprungliga källan, inte NotebookLM, som källa.</p>
+        </div>
+      </section>
+
+      <section id="k11">
+        <h2><span class="num">11</span> Vanliga misstag och felsökning</h2>
+        <div class="callout warn">
+          <strong class="label">Vanliga misstag</strong>
+          <ul>
+            <li>Man använder svar utan att kolla källhänvisningarna.</li>
+            <li>Man lägger in för få källor, så svaren blir tunna eller ofullständiga.</li>
+            <li>Man anger NotebookLM som källa i en inlämning i stället för den ursprungliga källan.</li>
+            <li>Man förlitar sig bara på en ljudöversikt i stället för att också läsa källorna.</li>
+          </ul>
+        </div>
+        <details class="faq">
+          <summary>NotebookLM svarar "det finns inte i dina källor"</summary>
+          <div class="a"><p>Kontrollera att du lagt till en källa som faktiskt tar upp ämnet, och att källan inte är urbockad i listan. Lägg gärna till fler källor om ämnet.</p></div>
+        </details>
+        <details class="faq">
+          <summary>Ljud- eller videoöversikten tar lång tid att skapas</summary>
+          <div class="a"><p>Det är normalt att det tar någon minut, särskilt med många eller långa källor. Vänta kvar på sidan tills den blir klar.</p></div>
+        </details>
+        <details class="faq">
+          <summary>Jag hittar inte min anteckningsbok</summary>
+          <div class="a"><p>Gå till startsidan på notebooklm.google.com och sök på namnet du gav anteckningsboken. Döper du alltid dina anteckningsböcker tydligt blir de lättare att hitta igen.</p></div>
+        </details>
+      </section>
+
+      <section id="k12">
+        <h2><span class="num">12</span> Ordlista</h2>
+        <dl class="glossary">
+          <dt>Anteckningsbok</dt>
+          <dd>Din arbetsyta i NotebookLM, med egna källor, chatt och Studio-material.</dd>
+          <dt>Källa</dt>
+          <dd>Ett dokument, en länk eller en text du lagt till, som NotebookLM bygger sina svar på.</dd>
+          <dt>Källhänvisning</dt>
+          <dd>Den lilla siffran i ett svar som visar exakt var i en källa informationen kommer ifrån.</dd>
+          <dt>Studio</dt>
+          <dd>Kolumnen med verktyg för att skapa ljudöversikt, video, frågekort, quiz, tankekarta och rapporter.</dd>
+          <dt>Ljudöversikt</dt>
+          <dd>En poddliknande sammanfattning av dina källor med två AI-röster.</dd>
+          <dt>Tankekarta</dt>
+          <dd>En visuell karta som visar hur begreppen i källorna hänger ihop.</dd>
+        </dl>
+      </section>
+
+      <section id="k13">
+        <h2><span class="num">13</span> Checklista – kan du det här?</h2>
+        <p>Gå igenom listan när du gått igenom hela guiden. Kryssa i det du känner dig säker på.</p>
+        <ul class="checklist" data-checklist="notebooklm-checklista">
+          <li><label><input type="checkbox"><span>Jag kan skapa en anteckningsbok och döpa den</span></label></li>
+          <li><label><input type="checkbox"><span>Jag kan lägga till källor</span></label></li>
+          <li><label><input type="checkbox"><span>Jag kan ställa frågor och kontrollera källhänvisningarna</span></label></li>
+          <li><label><input type="checkbox"><span>Jag kan skapa frågekort eller quiz i Studio</span></label></li>
+          <li><label><input type="checkbox"><span>Jag kan spara ett svar som en egen anteckning</span></label></li>
+          <li><label><input type="checkbox"><span>Jag anger den ursprungliga källan, inte NotebookLM, i mina inlämningar</span></label></li>
+          <li><label><input type="checkbox"><span>Jag läser igenom AI-genererat material innan jag använder det</span></label></li>
+        </ul>
+        <div class="chip-row">
+          <span class="chip">Sparas automatiskt i din webbläsare</span>
+        </div>
+      </section>
+
+    </article>
+  </main>
+</div>
+
+<a href="#prose" class="back-to-top no-print" id="backToTop">↑ Till toppen</a>
+
+<button type="button" class="ask-fab no-print" id="askFab">💬 <span class="txt">Kört fast? Fråga</span></button>
+
+<div id="askBackdrop" class="no-print"></div>
+<aside class="panel no-print" id="askPanel" aria-hidden="true" aria-labelledby="ask-titel" role="dialog">
+  <div class="panel-head">
+    <h2 id="ask-titel">Kört fast? Fråga här</h2>
+    <button type="button" id="askClose" aria-label="Stäng">✕</button>
+  </div>
+  <div class="panel-body">
+    <p class="hint">Skriv din fråga med egna ord. Svaren kommer från manualens eget innehåll och fungerar även utan internet.</p>
+    <input class="field" id="askInput" type="search" placeholder="T.ex. hur lägger jag till källor?" autocomplete="off" enterkeyhint="search">
+    <div class="chip-row" id="askChips"></div>
+    <div id="askSvar"></div>
+  </div>
+</aside>
+
+<footer class="page no-print">
+  <p>Manual för NotebookLM i skolan. Lättläst, mobilanpassad och med stöd för Bionic Reading och mörkt läge.</p>
+  <p>Senast uppdaterad: september 2026.</p>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  const html = document.documentElement;
+  const $ = (s, r) => (r||document).querySelector(s);
+  const $$ = (s, r) => Array.from((r||document).querySelectorAll(s));
+
+  const store = {
+    get(k, d){ try{ const v = localStorage.getItem('notebooklm-manual:'+k); return v===null ? d : JSON.parse(v); }catch(e){ return d; } },
+    set(k, v){ try{ localStorage.setItem('notebooklm-manual:'+k, JSON.stringify(v)); }catch(e){} },
+    del(k){ try{ localStorage.removeItem('notebooklm-manual:'+k); }catch(e){} }
+  };
+
+  /* ---- Tema ---- */
+  function applyTheme(t){
+    html.dataset.theme = t;
+    $('#themeLjus').setAttribute('aria-pressed', String(t==='ljus'));
+    $('#themeMork').setAttribute('aria-pressed', String(t==='mork'));
+    store.set('theme', t);
+  }
+  applyTheme(store.get('theme', 'ljus'));
+  $('#themeLjus').addEventListener('click', () => applyTheme('ljus'));
+  $('#themeMork').addEventListener('click', () => applyTheme('mork'));
+
+  /* ---- Textstorlek ---- */
+  function applySize(n){
+    n = Math.max(1, Math.min(4, n));
+    html.dataset.size = String(n);
+    store.set('size', n);
+  }
+  applySize(store.get('size', 2));
+  $('#sizeMinus').addEventListener('click', () => applySize(Number(html.dataset.size) - 1));
+  $('#sizePlus').addEventListener('click', () => applySize(Number(html.dataset.size) + 1));
+
+  /* ---- Typsnitt ---- */
+  function loadDyslexiFont(){
+    if($('#dyslexi-font-link')) return;
+    const link = document.createElement('link');
+    link.id = 'dyslexi-font-link'; link.rel = 'stylesheet';
+    link.href = 'https://fonts.cdnfonts.com/css/opendyslexic';
+    document.head.appendChild(link);
+  }
+  function applyFont(f){
+    html.dataset.font = f;
+    $('#fontToggle').setAttribute('aria-pressed', String(f==='dyslexi'));
+    store.set('font', f);
+    if(f === 'dyslexi') loadDyslexiFont();
+  }
+  applyFont(store.get('font', 'system'));
+  $('#fontToggle').addEventListener('click', () => applyFont(html.dataset.font === 'dyslexi' ? 'system' : 'dyslexi'));
+
+  /* ---- Bionic Reading ---- */
+  const SKIP_TAGS = new Set(['SCRIPT','STYLE','CODE','PRE','TEXTAREA','INPUT','SELECT','BUTTON','SVG','KBD']);
+  let pristine = null;
+  function fixation(len, level){
+    if(len <= 1) return len;
+    if(len <= 3) return 1;
+    const ratio = level===1 ? 0.35 : level===2 ? 0.5 : 0.65;
+    return Math.max(1, Math.min(len-1, Math.round(len*ratio)));
+  }
+  function bionifyNode(node, level){
+    const text = node.nodeValue;
+    if(!/[a-zA-ZåäöÅÄÖéèüÉÈÜ]/.test(text)) return;
+    const frag = document.createDocumentFragment();
+    text.split(/(\s+)/).forEach(chunk => {
+      if(!chunk) return;
+      const m = chunk.match(/^([^a-zA-ZåäöÅÄÖéèüÉÈÜ0-9]*)([a-zA-ZåäöÅÄÖéèüÉÈÜ]+)(.*)$/s);
+      if(!m){ frag.appendChild(document.createTextNode(chunk)); return; }
+      const [, pre, word, post] = m;
+      const cut = fixation(word.length, level);
+      if(pre) frag.appendChild(document.createTextNode(pre));
+      const b = document.createElement('b'); b.className = 'bx'; b.textContent = word.slice(0, cut);
+      frag.appendChild(b);
+      frag.appendChild(document.createTextNode(word.slice(cut) + post));
+    });
+    node.parentNode.replaceChild(frag, node);
+  }
+  function bionify(root, level){
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(n){
+        if(!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        let p = n.parentElement;
+        while(p && p !== root){
+          if(SKIP_TAGS.has(p.tagName)) return NodeFilter.FILTER_REJECT;
+          p = p.parentElement;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes = []; let n;
+    while((n = walker.nextNode())) nodes.push(n);
+    nodes.forEach(node => bionifyNode(node, level));
+  }
+  function renderBionic(level){
+    const prose = $('#prose'); if(!prose) return;
+    if(!pristine) pristine = prose.cloneNode(true);
+    const fresh = pristine.cloneNode(true);
+    prose.replaceChildren(...Array.from(fresh.childNodes));
+    if(level > 0) bionify(prose, level);
+    enhanceChecklists();
+  }
+  function applyBionic(level){
+    level = Math.max(0, Math.min(3, level));
+    html.dataset.bionic = String(level);
+    [0,1,2,3].forEach(i => $('#bionic'+i).setAttribute('aria-pressed', String(i===level)));
+    store.set('bionic', level);
+    renderBionic(level);
+  }
+  [0,1,2,3].forEach(i => $('#bionic'+i).addEventListener('click', () => applyBionic(i)));
+
+  /* ---- Checklista ---- */
+  function enhanceChecklists(){
+    $$('#prose ul.checklist').forEach(list => {
+      const id = list.dataset.checklist || 'lista';
+      const saved = store.get('chk:'+id, []);
+      $$('li', list).forEach((li, i) => {
+        const box = $('input[type=checkbox]', li);
+        if(!box) return;
+        box.checked = saved.includes(i);
+        box.addEventListener('change', () => {
+          const cur = new Set(store.get('chk:'+id, []));
+          box.checked ? cur.add(i) : cur.delete(i);
+          store.set('chk:'+id, Array.from(cur).sort((a,b)=>a-b));
+        });
+      });
+    });
+  }
+
+  /* ---- Utskrift ---- */
+  $('#printBtn').addEventListener('click', () => window.print());
+
+  /* ---- Till toppen ---- */
+  const backToTop = $('#backToTop');
+  window.addEventListener('scroll', () => {
+    backToTop.classList.toggle('visible', window.scrollY > 500);
+  }, { passive: true });
+
+  /* ---- Fråga (offline-kunskapsbas) ---- */
+  const KAPITELNAMN = {
+    k2:'Skapa en anteckningsbok', k3:'Lägga till källor', k4:'Chatta med dina källor',
+    k5:'Studio – ljud- och videoöversikt', k6:'Studio – frågekort och quiz',
+    k7:'Studio – tankekarta och rapporter', k8:'Spara svar som anteckningar',
+    k9:'Dela anteckningsboken', k10:'Källkritik – lita inte blint på AI:n',
+    k11:'Vanliga misstag och felsökning', k12:'Ordlista'
+  };
+  const FAQ = [
+    { kapitel:'k2', q:'Hur skapar jag en ny anteckningsbok?', tags:['skapa','ny anteckningsbok','anteckningsblock'],
+      a:'<p>Logga in på notebooklm.google.com och klicka på + Skapa anteckningsblock uppe till vänster. Döp den direkt med kurs och arbetsområde.</p>' },
+    { kapitel:'k3', q:'Hur lägger jag till källor?', tags:['lägga till källor','källor','ladda upp','pdf'],
+      a:'<p>Klicka på + Lägg till källor i vänsterkolumnen. Du kan ladda upp filer som PDF och Word, klistra in en webbadress eller skriva in text direkt.</p>' },
+    { kapitel:'k4', q:'Hur ställer jag en fråga till mina källor?', tags:['ställa fråga','chatta','fråga'],
+      a:'<p>Skriv frågan i rutan "Ställ en fråga eller skapa något" längst ner i mittenkolumnen. Klicka på källhänvisningens siffra i svaret för att se exakt var informationen kommer ifrån.</p>' },
+    { kapitel:'k4', q:'Kan jag lita på svaren?', tags:['lita på','pålitligt','källhänvisning','stämmer'],
+      a:'<p>Klicka alltid på källhänvisningarna och läs avsnittet själv innan du använder svaret. NotebookLM kan missförstå eller förenkla, se kapitlet om källkritik.</p>' },
+    { kapitel:'k5', q:'Hur skapar jag en ljudöversikt?', tags:['ljudöversikt','podd','lyssna'],
+      a:'<p>Klicka på Ljudöversikt i Studio-kolumnen och vänta medan den skapas. Den blir en poddliknande sammanfattning av dina källor.</p>' },
+    { kapitel:'k6', q:'Hur gör jag frågekort eller quiz?', tags:['frågekort','quiz','plugga','flashcards'],
+      a:'<p>Klicka på Frågekort eller Quiz i Studio-kolumnen. NotebookLM skapar frågor utifrån dina källor som du kan testa dig själv på.</p>' },
+    { kapitel:'k7', q:'Hur skapar jag en tankekarta?', tags:['tankekarta','mindmap','översikt'],
+      a:'<p>Klicka på Tankekarta i Studio-kolumnen för att få en visuell karta över hur begreppen i dina källor hänger ihop.</p>' },
+    { kapitel:'k8', q:'Hur sparar jag ett svar som anteckning?', tags:['spara anteckning','lägg till anteckning'],
+      a:'<p>Klicka på Lägg till anteckning vid svaret, eller på motsvarande knapp i Studio-kolumnen för att skriva en egen anteckning.</p>' },
+    { kapitel:'k9', q:'Hur delar jag min anteckningsbok?', tags:['dela','bjuda in'],
+      a:'<p>Klicka på Dela uppe till höger och bjud in en lärare eller klasskompis till anteckningsboken.</p>' },
+    { kapitel:'k10', q:'Vad ska jag ange som källa i min inlämning?', tags:['källa i inlämning','citera','referens'],
+      a:'<p>Ange alltid den ursprungliga källan (till exempel boken eller artikeln), inte NotebookLM, eftersom NotebookLM bara är ett verktyg som hjälpt dig hitta i källan.</p>' },
+    { kapitel:'k11', q:'NotebookLM säger att svaret inte finns i mina källor', tags:['finns inte i källor','inget svar'],
+      a:'<p>Kontrollera att du lagt till en källa om ämnet och att den inte är urbockad i listan. Lägg gärna till fler källor.</p>' }
+  ];
+  const STOP = new Set(['och','att','i','en','ett','på','för','med','som','av','är','man','jag','den','det','till','om','hur','vad','ska','skall','kan','får','vilken','vilket','vilka','när','var','min','mitt','mina','du','sig','har','hade','vara','måste','göra','gör','så','de','dem','eller','men','inte','ur']);
+  function normText(s){ return (s||'').toLowerCase().replace(/[^a-z0-9åäö\s]/g,' ').replace(/\s+/g,' ').trim(); }
+  function toWords(s){ return normText(s).split(' ').filter(w => w.length > 2 && !STOP.has(w)); }
+  function scoreFaq(q){
+    const qw = toWords(q); if(!qw.length) return [];
+    const nq = normText(q);
+    return FAQ.map(item => {
+      const hay = normText(item.q + ' ' + (item.tags||[]).join(' '));
+      const body = normText(item.a.replace(/<[^>]+>/g,' '));
+      let score = 0;
+      qw.forEach(w => {
+        if((item.tags||[]).some(t => normText(t) === w)) score += 3;
+        if(hay.includes(w)) score += 2;
+        else if(body.includes(w)) score += 1;
+      });
+      if(normText(item.q).includes(nq)) score += 4;
+      return { item, score: score / Math.sqrt(qw.length) };
+    }).filter(r => r.score >= 1.6).sort((a,b) => b.score - a.score).slice(0, 4);
+  }
+  function answerHtml(item){
+    const kap = KAPITELNAMN[item.kapitel];
+    return '<div class="qa-answer"><h3>' + item.q + '</h3>' + item.a +
+      (kap ? '<p class="src">Läs mer: <a href="#' + item.kapitel + '" class="js-goto">' + kap + '</a></p>' : '') +
+      '</div>';
+  }
+  function initAsk(){
+    const input = $('#askInput'), out = $('#askSvar'), chips = $('#askChips');
+    const suggestions = ['Hur lägger jag till källor?','Hur ställer jag en fråga till mina källor?','Hur gör jag frågekort eller quiz?','Kan jag lita på svaren?','Hur delar jag min anteckningsbok?'];
+    chips.innerHTML = suggestions.map(s => '<button type="button" class="chip">' + s + '</button>').join('');
+    $$('.chip', chips).forEach(c => c.addEventListener('click', () => { input.value = c.textContent; run(); input.focus(); }));
+
+    function run(){
+      const q = input.value.trim();
+      if(q.length < 3){ out.innerHTML = ''; return; }
+      const hits = scoreFaq(q);
+      if(!hits.length){
+        out.innerHTML = '<div class="qa-answer"><h3>Jag hittar inget säkert svar på det</h3>' +
+          '<p>Prova andra ord, eller bläddra i kapitlen till vänster. Du kan också fråga din lärare eller skolans IT-support.</p></div>';
+        return;
+      }
+      out.innerHTML = hits.map(h => answerHtml(h.item)).join('');
+      $$('.js-goto', out).forEach(a => a.addEventListener('click', closeAsk));
+    }
+    let t;
+    input.addEventListener('input', () => { clearTimeout(t); t = setTimeout(run, 180); });
+  }
+  const askPanel = $('#askPanel'), askBackdrop = $('#askBackdrop');
+  function openAsk(){
+    askPanel.classList.add('open'); askPanel.setAttribute('aria-hidden','false');
+    askBackdrop.classList.add('on');
+    setTimeout(() => $('#askInput').focus(), 60);
+  }
+  function closeAsk(){
+    askPanel.classList.remove('open'); askPanel.setAttribute('aria-hidden','true');
+    askBackdrop.classList.remove('on');
+  }
+  $('#askBtn').addEventListener('click', openAsk);
+  $('#askBtnHero').addEventListener('click', openAsk);
+  $('#askFab').addEventListener('click', openAsk);
+  $('#askClose').addEventListener('click', closeAsk);
+  askBackdrop.addEventListener('click', closeAsk);
+  document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeAsk(); });
+  initAsk();
+
+  /* ---- Mobil TOC-toggle ---- */
+  const tocAside = $('#tocAside'), tocToggle = $('#tocToggle');
+  tocToggle.addEventListener('click', () => {
+    const open = tocAside.classList.toggle('open');
+    tocToggle.setAttribute('aria-expanded', String(open));
+  });
+  $$('#tocList a').forEach(a => a.addEventListener('click', () => {
+    if(window.innerWidth <= 880){ tocAside.classList.remove('open'); tocToggle.setAttribute('aria-expanded','false'); }
+  }));
+
+  /* ---- Aktivt kapitel + läsförlopp ---- */
+  const sections = $$('#prose section');
+  const tocLinks = $$('#tocList a');
+  const seen = new Set();
+  const progressBar = $('#progressBar'), progressText = $('#progressText');
+  function updateProgress(){
+    progressBar.style.width = Math.round((seen.size / sections.length) * 100) + '%';
+    progressText.textContent = seen.size + ' av ' + sections.length + ' kapitel lästa';
+  }
+  updateProgress();
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      const id = entry.target.id;
+      const link = tocLinks.find(a => a.getAttribute('href') === '#'+id);
+      if(!link) return;
+      if(entry.isIntersecting){
+        tocLinks.forEach(a => a.classList.remove('active'));
+        link.classList.add('active');
+        if(entry.intersectionRatio > 0.4){
+          if(!seen.has(id)){ seen.add(id); updateProgress(); }
+        }
+      }
+    });
+  }, { rootMargin: '-80px 0px -60% 0px', threshold: [0, 0.4, 1] });
+  sections.forEach(s => io.observe(s));
+
+  /* ---- Init ---- */
+  enhanceChecklists();
+  applyBionic(store.get('bionic', 0));
+})();
+</script>
+</body>
+</html>
